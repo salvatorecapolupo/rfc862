@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulazione Echo Server con Animazione (RFC 862)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      font-size: 16px;
+    }
+    .log {
+      background-color: #f0f0f0;
+      padding: 10px;
+      margin-top: 10px;
+      height: 200px;
+      overflow-y: scroll;
+      font-family: monospace;
+    }
+    .animation-area {
+      margin-top: 30px;
+      text-align: center;
+      position: relative;
+      height: 150px;
+      border: 2px solid #ccc;
+    }
+    .client, .server {
+      display: inline-block;
+      padding: 10px;
+      font-weight: bold;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .client {
+      left: 10px;
+    }
+    .server {
+      right: 10px;
+    }
+    .packet {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50px;
+      transform: translateY(-50%);
+      padding: 5px 10px;
+      background-color: lightblue;
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulazione Echo Server con Animazione (RFC 862)</h1>
+    <p>Consulta lo <a href="https://datatracker.ietf.org/doc/html/rfc862" target="_blank">standard RFC 862</a> per maggiori dettagli sul protocollo Echo.</p>
+    <p>Inserisci un messaggio (solo lettere, spazi, numeri, max 9 caratteri):</p>
+    <input type="text" id="clientInput" placeholder="Digita qui il tuo messaggio">
+    <button id="sendButton">Invia al Server</button>
+    
+    <div class="log" id="log"></div>
+    
+    <div class="animation-area">
+      <div class="client">Client</div>
+      <div class="server">Server</div>
+      <div class="packet" id="packet">Pacchetto</div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('sendButton').addEventListener('click', sendRequest);
+
+    let startTime, endTime;
+
+    function logMessage(type, message) {
+      const logElement = document.getElementById('log');
+      logElement.innerHTML += `<strong>${type}:</strong> ${message}<br>`;
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    function sendRequest() {
+      const clientInput = document.getElementById('clientInput').value;
+
+      // Check validità input (solo lettere, spazi, numeri, max 9 caratteri)
+      const validInput = /^[a-zA-Z0-9 ]{1,9}$/;
+      if (!validInput.test(clientInput)) {
+        alert("Il messaggio può contenere solo lettere, numeri e spazi, ed essere lungo al massimo 9 caratteri.");
+        return;
+      }
+
+      // Calcola la dimensione in byte del pacchetto
+      const packetSize = new Blob([clientInput]).size;
+      logMessage('Info', `Dimensione del pacchetto: ${packetSize} byte`);
+
+      // Simula apertura della connessione
+      logMessage('Info', 'Connessione aperta.');
+
+      // Registra l'inizio del round-trip time (RTT)
+      startTime = new Date().getTime();
+
+      // Simula la richiesta inviata al server
+      logMessage('Client Request', clientInput);
+
+      const packet = document.getElementById('packet');
+      packet.style.display = 'block';
+      packet.innerHTML = `Richiesta: ${clientInput}`;
+      animatePacketToServer(packet, clientInput);
+    }
+
+    function animatePacketToServer(packet, clientInput) {
+      let position = 50;
+      const speed = Math.floor(Math.random() * (75 - 50 + 1)) + 50; // Velocità casuale
+      const interval = setInterval(() => {
+        if (position >= 460) {
+          clearInterval(interval);
+          logMessage('Server', `Pacchetto ricevuto: ${clientInput}. Invio echo...`);
+          
+          setTimeout(() => {
+            packet.innerHTML = `Echo: ${clientInput}`;
+            animatePacketToClient(packet, clientInput);
+          }, 1000);
+        } else {
+          position += 5;
+          packet.style.left = position + 'px';
+        }
+      }, speed);
+    }
+
+    function animatePacketToClient(packet, clientInput) {
+      let position = 460;
+      const speed = Math.floor(Math.random() * (150 - 30 + 1)) + 30; // Velocità casuale tra 30 e 150ms
+      const interval = setInterval(() => {
+        if (position <= 50) {
+          clearInterval(interval);
+          logMessage('Client', `Echo ricevuto: ${clientInput}`);
+
+          // Registra il tempo di fine round-trip
+          endTime = new Date().getTime();
+          const rtt = endTime - startTime;
+          logMessage('Info', `Round-trip time: ${rtt} ms`);
+
+          // Simula chiusura della connessione
+          logMessage('Info', 'Connessione chiusa.');
+
+          setTimeout(() => {
+            packet.style.display = 'none';
+          }, 500);
+        } else {
+          position -= 5;
+          packet.style.left = position + 'px';
+        }
+      }, speed);
+    }
+  </script>
+</body>
+</html>
