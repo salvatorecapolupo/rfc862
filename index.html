@@ -81,6 +81,7 @@
     document.getElementById('sendButton').addEventListener('click', sendRequest);
 
     let startTime, endTime;
+    let isOperationInProgress = false; // Flag per tracciare se è in corso un'operazione
 
     function logMessage(type, message) {
       const logElement = document.getElementById('log');
@@ -89,12 +90,19 @@
     }
 
     function sendRequest() {
+      if (isOperationInProgress) return; // Impedisce clic veloci durante un'operazione
+      isOperationInProgress = true; // Imposta l'operazione come in corso
+
       const clientInput = document.getElementById('clientInput').value;
+      const sendButton = document.getElementById('sendButton');
+      sendButton.disabled = true; // Disabilita il pulsante
 
       // Check validità input (solo lettere, spazi, numeri, max 9 caratteri)
       const validInput = /^[a-zA-Z0-9 ]{1,9}$/;
       if (!validInput.test(clientInput)) {
         alert("Il messaggio può contenere solo lettere, numeri e spazi, ed essere lungo al massimo 9 caratteri.");
+        sendButton.disabled = false; // Riabilita il pulsante in caso di errore
+        isOperationInProgress = false; // Ripristina il flag
         return;
       }
 
@@ -154,6 +162,8 @@
 
           setTimeout(() => {
             packet.style.display = 'none';
+            document.getElementById('sendButton').disabled = false; // Riabilita il pulsante
+            isOperationInProgress = false; // Resetta il flag
           }, 500);
         } else {
           position -= 5;
